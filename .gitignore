@@ -1,0 +1,20 @@
+data/*
+.devcontainer/devcontainer.json
+
+# SSL/TLS certificates
+ca-certificates/*
+nginx/ssl/*
+*.key
+*.pem
+*.crt
+
+# Other
+.DS_Store
+*.log
+*.env
+*.backup
+*.bak
+*.tmp
+
+!**/.gitignore
+!**/.gitkeep

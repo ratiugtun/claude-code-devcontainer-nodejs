@@ -1,0 +1,98 @@
+{
+  "name": "My Project with Claude Code",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "args": {
+      "NODE_VERSION": "24",
+      "INSTALL_CLAUDE_CLI": "true",
+      "GIT_CONFIG_EMAIL": "anonymous@mail.com",
+      "GIT_CONFIG_NAME": "Anonymous User",
+      "TZ": "${localEnv:TZ:Asia/Bangkok}",
+      "HTTP_PROXY": "${localEnv:http_proxy}",
+      "HTTPS_PROXY": "${localEnv:https_proxy}",
+      "NO_PROXY": "${localEnv:no_proxy}"
+    }
+  },
+  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "anthropic.claude-code"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "bash",
+            "icon": "terminal-bash"
+          },
+          "zsh": {
+            "path": "zsh"
+          }
+        }
+      }
+    }
+  },
+  "remoteUser": "node",
+  "mounts": [
+    "source=claude-code-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
+    "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=delegated"
+  ],
+  "remoteEnv": {
+    "NODE_OPTIONS": "--max-old-space-size=4096",
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
+    "POWERLEVEL9K_DISABLE_GITSTATUS": "true",
+    "http_proxy": "${localEnv:http_proxy}",
+    "https_proxy": "${localEnv:https_proxy}",
+    "HTTP_PROXY": "${localEnv:http_proxy}",
+    "HTTPS_PROXY": "${localEnv:https_proxy}",
+    "no_proxy": "${localEnv:no_proxy}",
+    "NO_PROXY": "${localEnv:no_proxy}"
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
+  "workspaceFolder": "/workspace",
+  // "postCreateCommand": "npm install --prefix=/workspace/frontend"
+  // "forwardPorts": [3000, 5173, 3306, 6379, 80, 443],
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Application",
+      "onAutoForward": "notify"
+    }
+  }
+  // "portsAttributes": {
+  //   "3000": {
+  //     "label": "Backend API",
+  //     "onAutoForward": "notify"
+  //   },
+  //   "5173": {
+  //     "label": "Frontend Dev Server",
+  //     "onAutoForward": "notify"
+  //   },
+  //   "3306": {
+  //     "label": "MySQL",
+  //     "onAutoForward": "silent"
+  //   },
+  //   "6379": {
+  //     "label": "Redis",
+  //     "onAutoForward": "silent"
+  //   },
+  //   "80": {
+  //     "label": "Nginx HTTP",
+  //     "onAutoForward": "notify"
+  //   },
+  //   "443": {
+  //     "label": "Nginx HTTPS",
+  //     "onAutoForward": "notify"
+  //   }
+  // }
+}
