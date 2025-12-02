@@ -99,11 +99,9 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -x
 
 # Install Claude Code CLI via npm if `INSTALL_CLAUDE_CLI` is set to "true"
-# Fix the claude-code version @2.0.47 to avoid MacOS proxy issue
-# Ref: https://github.com/anthropics/claude-code/issues/12081#issuecomment-3565017433
 ARG INSTALL_CLAUDE_CLI=false
 RUN if [ "$INSTALL_CLAUDE_CLI" = "true" ]; then \
-  npm install -g @anthropic-ai/claude-code@2.0.47; \
+  npm install -g @anthropic-ai/claude-code; \
   npm install -g ccusage@latest; \
   fi
 
