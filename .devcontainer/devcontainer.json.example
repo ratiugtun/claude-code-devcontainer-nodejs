@@ -14,7 +14,7 @@
       "NO_PROXY": "${localEnv:no_proxy}"
     }
   },
-  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW", "--name", "claude-code-devcontainer"],
   "customizations": {
     "vscode": {
       "extensions": [
