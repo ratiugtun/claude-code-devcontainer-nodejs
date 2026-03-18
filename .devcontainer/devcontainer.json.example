@@ -14,7 +14,10 @@
       "NO_PROXY": "${localEnv:no_proxy}"
     }
   },
-  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW", "--name", "claude-code-devcontainer"],
+  "runArgs": [
+    "--cap-add=NET_ADMIN", 
+    "--cap-add=NET_RAW", 
+    "--name", "devcon-${localWorkspaceFolderBasename}"],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -25,7 +28,7 @@
       ],
       "settings": {
         "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.defaultFormatter": "Anthropic.claude-code",
         "editor.codeActionsOnSave": {
           "source.fixAll.eslint": "explicit"
         },
@@ -50,6 +53,7 @@
   "remoteEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
     "CLAUDE_CONFIG_DIR": "/home/node/.claude",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "${localEnv:CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:0}",
     "POWERLEVEL9K_DISABLE_GITSTATUS": "true",
     "http_proxy": "${localEnv:http_proxy}",
     "https_proxy": "${localEnv:https_proxy}",
@@ -92,6 +96,10 @@
   //   },
   //   "443": {
   //     "label": "Nginx HTTPS",
+  //     "onAutoForward": "notify"
+  //   },
+  //   "22": {
+  //     "label": "SSH",
   //     "onAutoForward": "notify"
   //   }
   // }

@@ -1,6 +1,6 @@
-ARG NODE_VERSION=latest
 # node based on debian bookworm
-FROM node:${NODE_VERSION}
+ARG NODE_VERSION=24
+FROM node:${NODE_VERSION}-trixie
 
 ARG TZ
 ARG HTTP_PROXY
@@ -26,6 +26,7 @@ RUN if [ -n "$HTTP_PROXY" ] || [ -n "$HTTPS_PROXY" ]; then \
     update-ca-certificates; \
   fi && \
   rm -rf /tmp/ca-certificates-source
+  
 # Add the cert to the NODE_EXTRA_CA_CERTS environment variable
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
@@ -47,6 +48,7 @@ RUN apt update && apt install -y less \
   aggregate \
   jq \
   tree \
+  default-mysql-client \
   && rm -rf /var/lib/apt/lists/*
 
 # Try to install python3-full and python3-pip
@@ -104,6 +106,8 @@ RUN if [ "$INSTALL_CLAUDE_CLI" = "true" ]; then \
   npm install -g @anthropic-ai/claude-code; \
   npm install -g ccusage@latest; \
   fi
+
+ENV CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS="0"
 
 # Copy and set up firewall script
 COPY .devcontainer/init-firewall.sh /usr/local/bin/
