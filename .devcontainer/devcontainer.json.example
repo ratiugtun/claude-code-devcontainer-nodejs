@@ -6,11 +6,18 @@
     "args": {
       "NODE_VERSION": "24",
       "INSTALL_CLAUDE_CLI": "true",
+      "INSTALL_SCHEDULER_PLUGIN": "false",
+      "INSTALL_CLAUDE_CODE_AGENTS": "false",
       "GIT_CONFIG_EMAIL": "anonymous@mail.com",
       "GIT_CONFIG_NAME": "Anonymous User",
       "TZ": "${localEnv:TZ:Asia/Bangkok}",
+      "http_proxy": "${localEnv:http_proxy}",
+      "https_proxy": "${localEnv:https_proxy}",
+      "no_proxy": "${localEnv:no_proxy}",
       "HTTP_PROXY": "${localEnv:http_proxy}",
       "HTTPS_PROXY": "${localEnv:https_proxy}",
+      "WS_PROXY": "${localEnv:http_proxy}",
+      "WSS_PROXY": "${localEnv:https_proxy}",
       "NO_PROXY": "${localEnv:no_proxy}"
     }
   },
@@ -59,11 +66,18 @@
     "https_proxy": "${localEnv:https_proxy}",
     "HTTP_PROXY": "${localEnv:http_proxy}",
     "HTTPS_PROXY": "${localEnv:https_proxy}",
+    "WS_PROXY": "${localEnv:http_proxy}",
+    "WSS_PROXY": "${localEnv:https_proxy}",
     "no_proxy": "${localEnv:no_proxy}",
     "NO_PROXY": "${localEnv:no_proxy}"
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",
+  "postStartCommand": [
+    "/bin/bash",
+    "-c",
+    "/workspace/.devcontainer/devcontainer-entrypoint.sh"
+  ],
   // "postCreateCommand": "npm install --prefix=/workspace/frontend"
   // "forwardPorts": [3000, 5173, 3306, 6379, 80, 443],
   "forwardPorts": [5173],

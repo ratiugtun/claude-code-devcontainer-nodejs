@@ -30,6 +30,12 @@ RUN if [ -n "$HTTP_PROXY" ] || [ -n "$HTTPS_PROXY" ]; then \
 # Add the cert to the NODE_EXTRA_CA_CERTS environment variable
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
+# Configure wget to use the same proxy settings inside the dev-container
+RUN printf 'use_proxy = on\n' >> /etc/wgetrc && \
+  if [ -n "$HTTP_PROXY" ]; then printf 'http_proxy = %s\n' "$HTTP_PROXY" >> /etc/wgetrc; fi && \
+  if [ -n "$HTTPS_PROXY" ]; then printf 'https_proxy = %s\n' "$HTTPS_PROXY" >> /etc/wgetrc; fi && \
+  if [ -n "$NO_PROXY" ]; then printf 'no_proxy = %s\n' "$NO_PROXY" >> /etc/wgetrc; fi
+
 # Install basic development tools and iptables/ipset
 RUN apt update && apt install -y less \
   git \
@@ -102,15 +108,35 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 
 # Install Claude Code CLI via npm if `INSTALL_CLAUDE_CLI` is set to "true"
 ARG INSTALL_CLAUDE_CLI=false
+ARG INSTALL_CLAUDE_CODE_AGENTS=false
+ARG INSTALL_SCHEDULER_PLUGIN=false
 RUN if [ "$INSTALL_CLAUDE_CLI" = "true" ]; then \
   npm install -g @anthropic-ai/claude-code; \
   npm install -g ccusage@latest; \
+  if [ "$INSTALL_SCHEDULER_PLUGIN" = "true" ]; then \
+    claude plugin marketplace add https://github.com/kenneth-liao/ai-launchpad-marketplace.git; \
+    claude plugin install scheduler; \
+  fi; \
   fi
+
+COPY --chown=node:node .devcontainer/claude-code-agents /tmp/claude-code-agents
+WORKDIR /tmp/claude-code
+RUN if [ "$INSTALL_CLAUDE_CODE_AGENTS" = "true" ]; then \
+    while IFS= read -r agent || [ -n "$agent" ]; do \
+      case "$agent" in \
+        ''|\#*) continue ;; \
+      esac; \
+      npx --yes claude-code-templates@latest --agent "$agent"; \
+    done < /tmp/claude-code-agents; \
+  fi && \
+  rm -f /tmp/claude-code-agents
+WORKDIR /workspace
 
 ENV CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS="0"
 
 # Copy and set up firewall script
 COPY .devcontainer/init-firewall.sh /usr/local/bin/
+# COPY .devcontainer/devcontainer-entrypoint.sh /usr/local/bin/
 USER root
 RUN chmod +x /usr/local/bin/init-firewall.sh && \
   echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
