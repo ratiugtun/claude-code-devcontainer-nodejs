@@ -7,7 +7,9 @@ A ready-to-use [Development Container](https://containers.dev/) template for Nod
 ## Features
 
 - **Claude Code** — pre-installed CLI and VS Code extension
-- **Corporate proxy support** — pass-through proxy variables and custom CA certificate installation
+- **Claude Code Agent Templates** — optionally pre-install a curated set of agent templates (UI/UX designer, frontend dev, security auditor, and more) baked into the image and synced into the workspace on startup
+- **Claude Code Scheduler Plugin** — optionally install the scheduler plugin from the Claude Code marketplace
+- **Corporate proxy support** — pass-through proxy variables (HTTP/HTTPS/WebSocket) and custom CA certificate installation; `wget` is also pre-configured to use the proxy inside the container
 - **Network firewall** — whitelist-only outbound access (GitHub, npm, Anthropic API, VS Code)
 - **Node.js 24** on Debian Trixie (trixie)
 - **Zsh + Oh My Zsh** with Powerline10k theme and fzf fuzzy finder
@@ -101,11 +103,13 @@ When prompted, click **Reopen in Container**. The first build takes a few minute
 ```
 claude-code-devcontainer-nodejs/
 ├── .devcontainer/
-│   ├── Dockerfile                # Container image definition
-│   ├── devcontainer.json         # Active configuration (git-ignored)
-│   ├── devcontainer.json.example # Template — commit this, not the active one
-│   └── init-firewall.sh          # Optional network firewall script
-├── ca-certificates/              # Place corporate CA certs here (git-ignored)
+│   ├── Dockerfile                    # Container image definition
+│   ├── devcontainer.json             # Active configuration (git-ignored)
+│   ├── devcontainer.json.example     # Template — commit this, not the active one
+│   ├── init-firewall.sh              # Optional network firewall script
+│   ├── devcontainer-entrypoint.sh    # Startup script that syncs agent templates into the workspace
+│   └── claude-code-agents            # List of agent templates to install at build time
+├── ca-certificates/                  # Place corporate CA certs here (git-ignored)
 │   └── .gitkeep
 └── .gitignore
 ```
@@ -116,16 +120,18 @@ claude-code-devcontainer-nodejs/
 
 ### Build Arguments
 
-| Argument              | Default          | Description                                  |
-|-----------------------|------------------|----------------------------------------------|
-| `NODE_VERSION`        | `24`             | Node.js version                              |
-| `INSTALL_CLAUDE_CLI`  | `true`           | Install `@anthropic-ai/claude-code` globally |
-| `GIT_CONFIG_EMAIL`    | —                | Git commit email                             |
-| `GIT_CONFIG_NAME`     | —                | Git commit author name                       |
-| `TZ`                  | `Asia/Bangkok`   | Container timezone                           |
-| `HTTP_PROXY`          | *(from host)*    | HTTP proxy URL                               |
-| `HTTPS_PROXY`         | *(from host)*    | HTTPS proxy URL                              |
-| `NO_PROXY`            | *(from host)*    | Comma-separated no-proxy list                |
+| Argument                     | Default          | Description                                                              |
+|------------------------------|------------------|--------------------------------------------------------------------------|
+| `NODE_VERSION`               | `24`             | Node.js version                                                          |
+| `INSTALL_CLAUDE_CLI`         | `true`           | Install `@anthropic-ai/claude-code` globally                             |
+| `INSTALL_CLAUDE_CODE_AGENTS` | `false`          | Install agent templates listed in `claude-code-agents` at build time     |
+| `INSTALL_SCHEDULER_PLUGIN`   | `false`          | Install the Claude Code scheduler plugin from the marketplace            |
+| `GIT_CONFIG_EMAIL`           | —                | Git commit email                                                         |
+| `GIT_CONFIG_NAME`            | —                | Git commit author name                                                   |
+| `TZ`                         | `Asia/Bangkok`   | Container timezone                                                       |
+| `HTTP_PROXY` / `http_proxy`  | *(from host)*    | HTTP proxy URL (both cases forwarded)                                    |
+| `HTTPS_PROXY` / `https_proxy`| *(from host)*    | HTTPS proxy URL (both cases forwarded; also configures `wget`)           |
+| `NO_PROXY` / `no_proxy`      | *(from host)*    | Comma-separated no-proxy list (both cases forwarded)                     |
 
 ### Runtime Environment Variables
 
@@ -135,6 +141,7 @@ claude-code-devcontainer-nodejs/
 | `CLAUDE_CONFIG_DIR`                   | `/home/node/.claude`                   | Claude Code config directory           |
 | `NODE_EXTRA_CA_CERTS`                 | `/etc/ssl/certs/ca-certificates.crt`   | CA bundle for Node.js HTTPS            |
 | `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`| `0`                                    | Enable experimental Agent Teams (`1`)  |
+| `WS_PROXY` / `WSS_PROXY`             | *(from host)*                          | WebSocket proxy URLs (ws:// / wss://)  |
 
 ### Forwarded Ports
 
@@ -191,6 +198,63 @@ To enable the experimental **Agent Teams** feature:
 
 ---
 
+## Claude Code Agent Templates
+
+The container supports pre-installing a curated set of [Claude Code agent templates](https://github.com/anthropics/claude-code-templates) at image build time. Agents are baked into `/tmp/claude-code/.claude/agents/` and synced into `/workspace/.claude/agents/` on every container start — existing local edits are never overwritten.
+
+### Enabling Agent Installation
+
+Set `INSTALL_CLAUDE_CODE_AGENTS` to `true` in your `devcontainer.json`:
+
+```jsonc
+"build": {
+  "args": {
+    "INSTALL_CLAUDE_CLI": "true",
+    "INSTALL_CLAUDE_CODE_AGENTS": "true"
+  }
+}
+```
+
+### Customizing the Agent List
+
+Edit `.devcontainer/claude-code-agents` to control which templates are installed. Each line is an agent identifier passed to `claude-code-templates`. Blank lines and lines beginning with `#` are ignored.
+
+**Default agents:**
+
+| Agent                                      | Role                              |
+|--------------------------------------------|-----------------------------------|
+| `development-tools/context-manager`        | Context & session management      |
+| `development-team/ui-ux-designer`          | UI/UX design guidance             |
+| `development-team/frontend-developer`      | Frontend development              |
+| `development-team/fullstack-developer`     | Full-stack development            |
+| `database/database-architect`              | Database design & architecture    |
+| `development-tools/code-reviewer`          | Code review                       |
+| `development-tools/test-engineer`          | Testing & QA                      |
+| `security/security-auditor`               | Security auditing                 |
+| `expert-advisors/documentation-expert`    | Documentation guidance            |
+| `documentation/api-documenter`            | API documentation                 |
+| `development-team/devops-engineer`        | DevOps practices                  |
+| `devops-infrastructure/deployment-engineer`| Deployment & infrastructure      |
+
+### Enabling the Scheduler Plugin
+
+To also install the Claude Code scheduler plugin:
+
+```jsonc
+"build": {
+  "args": {
+    "INSTALL_CLAUDE_CLI": "true",
+    "INSTALL_SCHEDULER_PLUGIN": "true"
+  }
+}
+```
+
+### How the Startup Sync Works
+
+`devcontainer-entrypoint.sh` runs as the `postStartCommand` on every container start. It copies agents from the baked-in directory into `/workspace/.claude/agents/` using `cp -an` (no-overwrite), so any local changes you make to agent files are preserved across restarts.
+
+---
+
 ## Installed VS Code Extensions
 
 | Extension   | Purpose                   |
@@ -208,6 +272,8 @@ To enable the experimental **Agent Teams** feature:
 - **Add npm packages** — uncomment `postCreateCommand` and add your `npm install` command
 - **Different timezone** — set `TZ` build arg or use `${localEnv:TZ}` to inherit from host
 - **Additional ports** — uncomment entries in the `forwardPorts` array
+- **Pre-install agent templates** — set `INSTALL_CLAUDE_CODE_AGENTS: "true"` and edit `.devcontainer/claude-code-agents` to choose which agents to bake in
+- **Install scheduler plugin** — set `INSTALL_SCHEDULER_PLUGIN: "true"` (requires `INSTALL_CLAUDE_CLI: "true"`)
 
 ---
 
