@@ -30,11 +30,21 @@ RUN if [ -n "$HTTP_PROXY" ] || [ -n "$HTTPS_PROXY" ]; then \
 # Add the cert to the NODE_EXTRA_CA_CERTS environment variable
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
-# Configure wget to use the same proxy settings inside the dev-container
-RUN printf 'use_proxy = on\n' >> /etc/wgetrc && \
-  if [ -n "$HTTP_PROXY" ]; then printf 'http_proxy = %s\n' "$HTTP_PROXY" >> /etc/wgetrc; fi && \
-  if [ -n "$HTTPS_PROXY" ]; then printf 'https_proxy = %s\n' "$HTTPS_PROXY" >> /etc/wgetrc; fi && \
-  if [ -n "$NO_PROXY" ]; then printf 'no_proxy = %s\n' "$NO_PROXY" >> /etc/wgetrc; fi
+# Install Docker CLI
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc \
+  && chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+RUN tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+RUN apt update && apt install -y docker-ce-cli
+
 
 # Install basic development tools and iptables/ipset
 RUN apt update && apt install -y less \
@@ -84,7 +94,7 @@ WORKDIR /workspace
 
 RUN ARCH=$(dpkg --print-architecture) && \
   wget "https://github.com/dandavison/delta/releases/download/0.18.2/git-delta_0.18.2_${ARCH}.deb" && \
-  sudo dpkg -i "git-delta_0.18.2_${ARCH}.deb" && \
+  dpkg -i "git-delta_0.18.2_${ARCH}.deb" && \
   rm "git-delta_0.18.2_${ARCH}.deb"
 
 # Set up non-root user
@@ -108,8 +118,6 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 
 # Install Claude Code CLI via npm if `INSTALL_CLAUDE_CLI` is set to "true"
 ARG INSTALL_CLAUDE_CLI=false
-ARG INSTALL_CLAUDE_CODE_AGENTS=false
-ARG INSTALL_SCHEDULER_PLUGIN=false
 RUN if [ "$INSTALL_CLAUDE_CLI" = "true" ]; then \
   npm install -g @anthropic-ai/claude-code; \
   npm install -g ccusage@latest; \
@@ -136,11 +144,16 @@ ENV CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS="0"
 
 # Copy and set up firewall script
 COPY .devcontainer/init-firewall.sh /usr/local/bin/
-# COPY .devcontainer/devcontainer-entrypoint.sh /usr/local/bin/
 USER root
 RUN chmod +x /usr/local/bin/init-firewall.sh && \
   echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
   chmod 0440 /etc/sudoers.d/node-firewall
+
+# Copy and set up docker socket permission script
+COPY .devcontainer/init-docker-socket.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/init-docker-socket.sh && \
+  echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-docker-socket.sh" > /etc/sudoers.d/node-docker && \
+  chmod 0440 /etc/sudoers.d/node-docker
 USER node
 
 ARG GIT_CONFIG_EMAIL
@@ -148,3 +161,12 @@ ARG GIT_CONFIG_NAME
 # Configure git for the node user
 RUN git config --global user.email "$GIT_CONFIG_EMAIL" && \
     git config --global user.name "$GIT_CONFIG_NAME"
+
+# Copy entrypoint script
+COPY .devcontainer/devcontainer-entrypoint.sh /usr/local/bin/devcontainer-entrypoint.sh
+USER root
+RUN chmod +x /usr/local/bin/devcontainer-entrypoint.sh
+USER node
+
+ENTRYPOINT ["/usr/local/bin/devcontainer-entrypoint.sh"]
+CMD ["sleep", "infinity"]
