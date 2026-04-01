@@ -55,7 +55,10 @@
   "remoteUser": "node",
   "mounts": [
     "source=claude-code-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
-    "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=delegated"
+    "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=delegated",
+    // The following mount allows the container to access the Docker daemon on the host machine, enabling you to run Docker commands from within the container.
+    // remove the line if you don't want to use Docker inside the container
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
   "remoteEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
@@ -80,13 +83,6 @@
   ],
   // "postCreateCommand": "npm install --prefix=/workspace/frontend"
   // "forwardPorts": [3000, 5173, 3306, 6379, 80, 443],
-  "forwardPorts": [5173],
-  "portsAttributes": {
-    "5173": {
-      "label": "Application",
-      "onAutoForward": "notify"
-    }
-  }
   // "portsAttributes": {
   //   "3000": {
   //     "label": "Backend API",
