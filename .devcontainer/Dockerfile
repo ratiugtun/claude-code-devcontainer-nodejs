@@ -129,13 +129,16 @@ RUN if [ "$INSTALL_CLAUDE_CLI" = "true" ]; then \
 
 COPY --chown=node:node .devcontainer/claude-code-agents /tmp/claude-code-agents
 WORKDIR /tmp/claude-code
+ARG INSTALL_CLAUDE_CODE_AGENTS=false
 RUN if [ "$INSTALL_CLAUDE_CODE_AGENTS" = "true" ]; then \
+    agents=""; \
     while IFS= read -r agent || [ -n "$agent" ]; do \
-      case "$agent" in \
-        ''|\#*) continue ;; \
-      esac; \
-      npx --yes claude-code-templates@latest --agent "$agent"; \
+      case "$agent" in ''|\#*) continue ;; esac; \
+      if [ -z "$agents" ]; then agents="$agent"; else agents="$agents,$agent"; fi; \
     done < /tmp/claude-code-agents; \
+    if [ -n "$agents" ]; then \
+      npx --yes claude-code-templates@latest --agent "$agents" -d /tmp/claude-code; \
+    fi; \
   fi && \
   rm -f /tmp/claude-code-agents
 WORKDIR /workspace
