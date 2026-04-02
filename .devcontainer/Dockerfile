@@ -19,7 +19,7 @@ ENV NO_PROXY="$NO_PROXY"
 # Add Certificate Authorities
 ###########################################################################
 # Copy CA certificates from workspace if they exist
-COPY ca-certificates /tmp/ca-certificates-source
+COPY ca-certificates/*.crt /tmp/ca-certificates-source
 RUN if [ -n "$HTTP_PROXY" ] || [ -n "$HTTPS_PROXY" ]; then \
     find /tmp/ca-certificates-source -name "*.crt" -exec cp {} /usr/local/share/ca-certificates/ \; 2>/dev/null || true && \
     find /usr/local/share/ca-certificates/ -name "*.crt" -exec chmod 644 {} \; 2>/dev/null || true && \
