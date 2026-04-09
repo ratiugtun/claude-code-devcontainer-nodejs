@@ -60,6 +60,10 @@
     // remove the line if you don't want to use Docker inside the container
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
+  "containerEnv": {
+    "GITLAB_HOST": "${localEnv:GITLAB_HOST:gitlab.com}",
+    "GITLAB_TOKEN": "${localEnv:GITLAB_TOKEN}"
+  },
   "remoteEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
     "CLAUDE_CONFIG_DIR": "/home/node/.claude",
@@ -72,7 +76,9 @@
     "WS_PROXY": "${localEnv:http_proxy}",
     "WSS_PROXY": "${localEnv:https_proxy}",
     "no_proxy": "${localEnv:no_proxy}",
-    "NO_PROXY": "${localEnv:no_proxy}"
+    "NO_PROXY": "${localEnv:no_proxy}",
+    "GITLAB_HOST": "${localEnv:GITLAB_HOST:gitlab.com}",
+    "GITLAB_TOKEN": "${localEnv:GITLAB_TOKEN}"
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",

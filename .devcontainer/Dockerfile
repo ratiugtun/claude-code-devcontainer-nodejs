@@ -19,8 +19,8 @@ ENV NO_PROXY="$NO_PROXY"
 # Add Certificate Authorities
 ###########################################################################
 # Copy CA certificates from workspace if they exist
-COPY ca-certificates/*.crt /tmp/ca-certificates-source
-RUN if [ -n "$HTTP_PROXY" ] || [ -n "$HTTPS_PROXY" ]; then \
+COPY ca-certificates /tmp/ca-certificates-source
+RUN if find /tmp/ca-certificates-source -name "*.crt" -print -quit 2>/dev/null | grep -q .; then \
     find /tmp/ca-certificates-source -name "*.crt" -exec cp {} /usr/local/share/ca-certificates/ \; 2>/dev/null || true && \
     find /usr/local/share/ca-certificates/ -name "*.crt" -exec chmod 644 {} \; 2>/dev/null || true && \
     update-ca-certificates; \
@@ -57,6 +57,7 @@ RUN apt update && apt install -y less \
   unzip \
   gnupg2 \
   gh \
+  glab \
   iptables \
   ipset \
   iproute2 \
@@ -129,16 +130,13 @@ RUN if [ "$INSTALL_CLAUDE_CLI" = "true" ]; then \
 
 COPY --chown=node:node .devcontainer/claude-code-agents /tmp/claude-code-agents
 WORKDIR /tmp/claude-code
-ARG INSTALL_CLAUDE_CODE_AGENTS=false
 RUN if [ "$INSTALL_CLAUDE_CODE_AGENTS" = "true" ]; then \
-    agents=""; \
     while IFS= read -r agent || [ -n "$agent" ]; do \
-      case "$agent" in ''|\#*) continue ;; esac; \
-      if [ -z "$agents" ]; then agents="$agent"; else agents="$agents,$agent"; fi; \
+      case "$agent" in \
+        ''|\#*) continue ;; \
+      esac; \
+      npx --yes claude-code-templates@latest --agent "$agent"; \
     done < /tmp/claude-code-agents; \
-    if [ -n "$agents" ]; then \
-      npx --yes claude-code-templates@latest --agent "$agents" -d /tmp/claude-code; \
-    fi; \
   fi && \
   rm -f /tmp/claude-code-agents
 WORKDIR /workspace
