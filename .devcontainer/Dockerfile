@@ -119,6 +119,7 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 
 # Install Claude Code CLI via npm if `INSTALL_CLAUDE_CLI` is set to "true"
 ARG INSTALL_CLAUDE_CLI=false
+ARG INSTALL_SCHEDULER_PLUGIN=false
 RUN if [ "$INSTALL_CLAUDE_CLI" = "true" ]; then \
   npm install -g @anthropic-ai/claude-code; \
   npm install -g ccusage@latest; \
@@ -130,6 +131,7 @@ RUN if [ "$INSTALL_CLAUDE_CLI" = "true" ]; then \
 
 COPY --chown=node:node .devcontainer/claude-code-agents /tmp/claude-code-agents
 WORKDIR /tmp/claude-code
+ARG INSTALL_CLAUDE_CODE_AGENTS=false
 RUN if [ "$INSTALL_CLAUDE_CODE_AGENTS" = "true" ]; then \
     while IFS= read -r agent || [ -n "$agent" ]; do \
       case "$agent" in \
