@@ -1,5 +1,6 @@
 data/*
 .devcontainer/devcontainer.json
+.claude
 
 # SSL/TLS certificates
 ca-certificates/*

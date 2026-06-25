@@ -45,6 +45,21 @@ EOF
 
 RUN apt update && apt install -y docker-ce-cli
 
+# Install GitHub CLI from the official repository
+# https://github.com/cli/cli/blob/trunk/docs/install_linux.md
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+  && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+
+# Add the repository to Apt sources:
+RUN tee /etc/apt/sources.list.d/github-cli.sources <<EOF
+Types: deb
+URIs: https://cli.github.com/packages
+Suites: stable
+Components: main
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/githubcli-archive-keyring.gpg
+EOF
+
 
 # Install basic development tools and iptables/ipset
 RUN apt update && apt install -y less \
