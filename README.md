@@ -1,4 +1,4 @@
-# DevContainer for My Profile App with Claude Code
+# DevContainer for bootstrapping App with Claude Code
 
 This repository is the **DevContainer overlay** for bootstrapping the application workspace. It contains
 only the development-environment configuration — it is **not** the application source itself. The app
