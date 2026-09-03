@@ -19,3 +19,20 @@ fi
 
 usermod -aG "$GROUP_NAME" node
 echo "Added node to group $GROUP_NAME (GID $SOCKET_GID) for docker.sock access."
+
+# The group add above only reaches shells started AFTER it runs. The VS Code
+# server that spawns your terminals starts at container boot, so its child shells
+# keep the old group set until a full window reopen — which is why `docker` still
+# gets "permission denied" right after the socket is mounted. Grant node on the
+# socket inode itself (checked at access time, no group refresh needed) so it
+# works immediately in every shell. On Docker Desktop the in-container socket is a
+# VM proxy, so this does not affect the host; on a Linux host with a real bind
+# mount it also relaxes the host socket (fine for a personal dev machine).
+if chown node "$SOCKET" 2>/dev/null; then
+  chmod u+rw "$SOCKET" 2>/dev/null || true
+  echo "Set $SOCKET owner=node — usable in all current and future shells."
+elif chmod a+rw "$SOCKET" 2>/dev/null; then
+  echo "Applied a+rw to $SOCKET (chown unavailable)."
+else
+  echo "WARNING: could not adjust $SOCKET permissions; reopen the window to pick up the group."
+fi
