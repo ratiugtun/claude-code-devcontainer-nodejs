@@ -6,7 +6,9 @@
     "args": {
       "NODE_VERSION": "24",
       "INSTALL_CLAUDE_CLI": "true",
+      "INSTALL_CCUSAGE": "false",
       "INSTALL_SCHEDULER_PLUGIN": "false",
+      "INSTALL_CODE_MODERNIZATION_PLUGIN": "false",
       "INSTALL_CLAUDE_CODE_AGENTS": "false",
       "GIT_CONFIG_EMAIL": "anonymous@mail.com",
       "GIT_CONFIG_NAME": "Anonymous User",

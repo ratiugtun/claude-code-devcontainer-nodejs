@@ -16,6 +16,7 @@ Repository contents:
 - **Claude Code CLI**: Pre-installed and ready to use (optional via build arg)
 - **Pre-installed Claude Code Agents**: A curated agent set baked into the image and synced into the workspace at startup
 - **Scheduler plugin**: Optional Claude Code scheduler plugin for cron-style tasks
+- **Code Modernization plugin**: Optional `code-modernization` plugin from the official Claude plugin marketplace
 - **GitLab CLI (`glab`)**: Pre-installed and auto-configured at startup
 - **GitHub CLI (`gh`)**: Pre-installed
 - **Docker CLI**: Pre-installed; can drive the host Docker daemon when the socket is mounted which useful for Claude Code agents to work with containers
@@ -86,8 +87,10 @@ the committed config.
 | ---------------------------- | ---------------------- | ----------------------------------------------------------------------------- |
 | `NODE_VERSION`               | `24`                   | Node.js major version (image base is `node:${NODE_VERSION}-trixie`)           |
 | `PHP_VERSION`                | `8.4`                  | PHP version target for backend tooling                                        |
-| `INSTALL_CLAUDE_CLI`         | `true`                 | Install the Claude Code CLI (`@anthropic-ai/claude-code`) and `ccusage`       |
+| `INSTALL_CLAUDE_CLI`         | `true`                 | Install the Claude Code CLI (`@anthropic-ai/claude-code`)                     |
+| `INSTALL_CCUSAGE`            | `false`                | Install [`ccusage`](https://github.com/ryoppippi/ccusage) for Claude Code usage reports |
 | `INSTALL_SCHEDULER_PLUGIN`   | `true`                 | Install the Claude Code scheduler plugin (requires `INSTALL_CLAUDE_CLI=true`) |
+| `INSTALL_CODE_MODERNIZATION_PLUGIN` | `false`         | Install `code-modernization@claude-plugins-official` (requires `INSTALL_CLAUDE_CLI=true`) |
 | `INSTALL_CLAUDE_CODE_AGENTS` | `true`                 | Bake in the agents listed in `.devcontainer/claude-code-agents`               |
 | `GIT_CONFIG_NAME`            | _(maintainer's name)_  | Value for `git config --global user.name` — **change this**                   |
 | `GIT_CONFIG_EMAIL`           | _(maintainer's email)_ | Value for `git config --global user.email` — **change this**                  |
@@ -96,8 +99,8 @@ the committed config.
 Proxy build args (`http_proxy`, `https_proxy`, `no_proxy` and their upper-case variants) are also wired
 through from the host's local environment so that image build steps work behind a proxy.
 
-> The sanitized `.example` ships with `INSTALL_SCHEDULER_PLUGIN=false` and
-> `INSTALL_CLAUDE_CODE_AGENTS=false` so a fresh setup is lightweight; enable them as needed.
+> The sanitized `.example` ships with `INSTALL_SCHEDULER_PLUGIN=false`,
+> `INSTALL_CODE_MODERNIZATION_PLUGIN=false` and `INSTALL_CLAUDE_CODE_AGENTS=false` so a fresh setup is lightweight; enable them as needed.
 
 ## Pre-Installed Claude Code Agents
 
@@ -131,6 +134,10 @@ To change the baked-in set, edit `.devcontainer/claude-code-agents` and rebuild 
 - **Scheduler plugin** — When `INSTALL_SCHEDULER_PLUGIN=true` (and `INSTALL_CLAUDE_CLI=true`), the build
   adds the [`ai-launchpad-marketplace`](https://github.com/kenneth-liao/ai-launchpad-marketplace)
   marketplace and installs the `scheduler` plugin, enabling cron-style scheduled Claude Code tasks.
+
+- **Code Modernization plugin** — When `INSTALL_CODE_MODERNIZATION_PLUGIN=true` (and `INSTALL_CLAUDE_CLI=true`),
+  the build registers the official [`claude-plugins-official`](https://github.com/anthropics/claude-plugins-official)
+  marketplace (if not already present) and installs `code-modernization@claude-plugins-official`.
 
 - **Experimental agent teams** — The `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` environment variable controls
   multi-agent team features. It defaults to **`0`** (off) and is wired via `remoteEnv` from

@@ -135,13 +135,23 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 # Install Claude Code CLI via npm if `INSTALL_CLAUDE_CLI` is set to "true"
 ARG INSTALL_CLAUDE_CLI=false
 ARG INSTALL_SCHEDULER_PLUGIN=false
+ARG INSTALL_CODE_MODERNIZATION_PLUGIN=false
 RUN if [ "$INSTALL_CLAUDE_CLI" = "true" ]; then \
   npm install -g @anthropic-ai/claude-code; \
-  npm install -g ccusage@latest; \
   if [ "$INSTALL_SCHEDULER_PLUGIN" = "true" ]; then \
     claude plugin marketplace add https://github.com/kenneth-liao/ai-launchpad-marketplace.git; \
     claude plugin install scheduler; \
   fi; \
+  if [ "$INSTALL_CODE_MODERNIZATION_PLUGIN" = "true" ]; then \
+    claude plugin marketplace add anthropics/claude-plugins-official || true; \
+    claude plugin install code-modernization@claude-plugins-official; \
+  fi; \
+  fi
+
+# Install ccusage (Claude Code usage analyzer) if `INSTALL_CCUSAGE` is set to "true"
+ARG INSTALL_CCUSAGE=false
+RUN if [ "$INSTALL_CCUSAGE" = "true" ]; then \
+  npm install -g ccusage@latest; \
   fi
 
 COPY --chown=node:node .devcontainer/claude-code-agents /tmp/claude-code-agents
